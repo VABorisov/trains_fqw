@@ -181,36 +181,40 @@ function M_C(hi, b, q, f, v, L, w, Lw, mu, ae, gamma, step, p_type)
 
 end
 
-function Risks(v_var, S_div, L_common, L1, q_arr, f_arr, step_arr, ae_arr, gamma_arr, hi_arr, theta1, theta2, theta3, a1, a2, a3, b1, b2, p_s_l_line, p_s_l_wave, p_s_l_cover, P_s, part_with_gamma_theta_1, part_with_gamma_theta_2, part_with_gamma_theta_3, w, mu, sum_d_arr)
-    comp_r1 = 1
-    summ_r2 = 0
-    for k = 1:size(S_div , 1)
-        @Threads.threads for s = S_div[k,1]:S_div[k,2]
-            summ_r1_n = 0
-            summ_r2_n = 0
-            @inbounds for i = 1:3 * L_common^2
-                q_i = q_arr[i]
-                f_i = f_arr[i]
-                step = step_arr[i]
-                v = v_var[s]
-                value = s - sum_d_arr[f_i]
-                ae, gamma, hi = value < 1 ? (0, 0, 0) : (ae_arr[value], gamma_arr[value], hi_arr[value])
-                type_symbol = i <= L_common^2 ? :line : (i <= 2 * L_common^2 ? :wave : :cover)
-                theta = i <= L_common^2 ? theta1 : (i <= 2 * L_common^2 ? theta2 : theta3)
-                a = i <= L_common^2 ? a1 : (i <= 2 * L_common^2 ? a2 : a3)
-                b = i <= L_common^2 ? b1 : (i <= 2 * L_common^2 ? b2 : 0)
-                part_with_gamma = i <= L_common^2 ? part_with_gamma_theta_1 : (i <= 2 * L_common^2 ? part_with_gamma_theta_2 : part_with_gamma_theta_3)
-                psl = i <= L_common^2 ? p_s_l_line[s, f_i] : (i <= 2 * L_common^2 ? p_s_l_wave[s, f_i] : p_s_l_cover[s, f_i])
+function Risks(S, L_common, L1, q_arr, f_arr, step_arr, v_arrs, ae_arr, gamma_arr, hi_arr, theta1, theta2, theta3, a1, a2, a3, b1, b2, p_s_l_line, p_s_l_wave, p_s_l_cover, P_s, part_with_gamma_theta_1, part_with_gamma_theta_2, part_with_gamma_theta_3, w, mu, sum_d_arr)
+    tick()
+    comp_r1 = ones(length(v_arrs)) 
+    summ_r2 = zeros(length(v_arrs)) 
+    @Threads.threads for s = 1:S
+        summ_r1_n = zeros(length(v_arrs))
+        summ_r2_n = zeros(length(v_arrs))
+        @inbounds for i = 1:3 * L_common^2
+            q_i = q_arr[i]
+            f_i = f_arr[i]
+            step = step_arr[i]
+            value = s - sum_d_arr[f_i]
+            ae, gamma, hi = value < 1 ? (0, 0, 0) : (ae_arr[value], gamma_arr[value], hi_arr[value])
+            type_symbol = i <= L_common^2 ? :line : (i <= 2 * L_common^2 ? :wave : :cover)
+            theta = i <= L_common^2 ? theta1 : (i <= 2 * L_common^2 ? theta2 : theta3)
+            a = i <= L_common^2 ? a1 : (i <= 2 * L_common^2 ? a2 : a3)
+            b = i <= L_common^2 ? b1 : (i <= 2 * L_common^2 ? b2 : 0)
+            part_with_gamma = i <= L_common^2 ? part_with_gamma_theta_1 : (i <= 2 * L_common^2 ? part_with_gamma_theta_2 : part_with_gamma_theta_3)
+            psl = i <= L_common^2 ? p_s_l_line[s, f_i] : (i <= 2 * L_common^2 ? p_s_l_wave[s, f_i] : p_s_l_cover[s, f_i])
+            @inbounds for idx in 1:length(v_arrs)
+                v = v_arrs[idx][s]
                 pslk = p_s_l_k_vs_combined(s, f_i, q_i, v, theta, a, L_common, w, L1, mu, ae, gamma, type_symbol, part_with_gamma)
                 m_c_si_vs = M_C(hi,b,q_i,f_i,v,L_common,w,L1,mu,ae,gamma,step,type_symbol)
-                summ_r1_n += P_s * psl * pslk
-                summ_r2_n += m_c_si_vs * P_s * psl * pslk * comp_r1
+                summ_r1_n[idx] += P_s * psl * pslk
+                summ_r2_n[idx] += m_c_si_vs * P_s * psl * pslk * comp_r1[idx]
             end
-            comp_r1 *= (1 - summ_r1_n)
-            summ_r2 += summ_r2_n
+        end
+        @inbounds for idx in 1:length(comp_r1)
+            comp_r1[idx] *= (1 - summ_r1_n[idx])
+            summ_r2[idx] += summ_r2_n[idx]
         end
     end
-    return summ_r2
+    tock()
+    return 1 .- comp_r1, summ_r2
 end
 
 function main() 
@@ -242,12 +246,12 @@ function main()
     ae_s = [1 / 2000, 1 / 1500, 1 / 1500, 0, 1 / 800, 1 / 1000, 0, 1 / 600, 0, 0]
     gamma_s = [-0.0001, -0.009, -0.003, 0.01, -0.004, 0.008, 0, 0.005, -0.01, 0.005]
     hi_s = 1
-    theta1 = 3.83
+    theta1 = 3.84
     theta2 = 0.2933
     theta3 = 0.41
     a1 = [-7.76, 315.69, 286.88, 0.63, -333.03, 4.32, 0.17, -1.55, 0.2, 0.04]
-    a2 = [-5.33, 0.83, 0.56, 1.36]
-    a3 = [-1.49, 0.99, -0.16, -0.91, 0.43]
+    a2 = [-5.33, 0.83, 0.56, 1.36, 0.2933]
+    a3 = [-1.49, 0.99, -0.16, -0.91, 0.43, 0.41]
     b1 = [-7.16, 1.98, 2.05]
     b2 = [-2.43, 1.87, 0.19]
     L_common = L0 + L1
@@ -265,8 +269,9 @@ function main()
     step_arr = step_func(L_common, q_arr, f_arr)
     ae_arr, gamma_arr, hi_arr, v1_arr, v2_arr, v3_arr, p_s_l_line, p_s_l_wave, p_s_l_cover, part_with_gamma_theta_1, part_with_gamma_theta_2, part_with_gamma_theta_3 = precalculation(
     S, S_div,theta1,theta2, theta3, muliplier_p_line_s_l, muliplier_p_wave_s_l, muliplier_p_cover_s_l, ae_s, gamma_s, v1s, v2s,v3s, L_common, sum_d_arr, hi_s)
-    v_arrs = v1_arr
-    r2 = Risks(S_div, L_common, L1, q_arr, f_arr, step_arr, v_arrs, ae_arr, gamma_arr, hi_arr, theta1, theta2, theta3, a1, a2, a3, b1, b2, p_s_l_line, p_s_l_wave, p_s_l_cover, P_s, part_with_gamma_theta_1, part_with_gamma_theta_2, part_with_gamma_theta_3, w, mu, sum_d_arr)
+    v_arrs = [v1_arr, v2_arr, v3_arr]
+    r1, r2 = Risks(S, L_common, L1, q_arr, f_arr, step_arr, v_arrs, ae_arr, gamma_arr, hi_arr, theta1, theta2, theta3, a1, a2, a3, b1, b2, p_s_l_line, p_s_l_wave, p_s_l_cover, P_s, part_with_gamma_theta_1, part_with_gamma_theta_2, part_with_gamma_theta_3, w, mu, sum_d_arr)
+    println(r1)
     println(r2)
 end
 
