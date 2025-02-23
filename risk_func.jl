@@ -183,9 +183,12 @@ end
 
 function ProbabilisticRiskFunction(v_var, S_div, L_common, L1, q_arr, f_arr, ae_arr, gamma_arr, theta1, theta2, theta3, a1, a2, a3, p_s_l_line, p_s_l_wave, p_s_l_cover, P_s, part_with_gamma_theta_1, part_with_gamma_theta_2, part_with_gamma_theta_3, w, mu, sum_d_arr)
     comp_r1 = 1
+    lk = ReentrantLock()
+
     for k = 1:size(S_div , 1)
         @Threads.threads for s = S_div[k,1]:S_div[k,2]
             summ_r1_n = 0
+
             @inbounds for i = 1:3 * L_common^2
                 q_i = q_arr[i]
                 f_i = f_arr[i]
@@ -199,8 +202,11 @@ function ProbabilisticRiskFunction(v_var, S_div, L_common, L1, q_arr, f_arr, ae_
                 psl = i <= L_common^2 ? p_s_l_line[s, f_i] : (i <= 2 * L_common^2 ? p_s_l_wave[s, f_i] : p_s_l_cover[s, f_i])
                 pslk = p_s_l_k_vs_combined(s, f_i, q_i, v, theta, a, L_common, w, L1, mu, ae, gamma, type_symbol, part_with_gamma)
                 summ_r1_n += P_s * psl * pslk
+                
             end
+            lock(lk)
             comp_r1 *= (1 - summ_r1_n)
+            unlock(lk)
         end
     end
     obj_value = 1 .- comp_r1

@@ -182,31 +182,32 @@ function M_C(hi, b, q, f, v, L, w, Lw, mu, ae, gamma, step, p_type)
 end
 
 function Risks(S, L_common, L1, q_arr, f_arr, step_arr, v_arrs, ae_arr, gamma_arr, hi_arr, theta1, theta2, theta3, a1, a2, a3, b1, b2, p_s_l_line, p_s_l_wave, p_s_l_cover, P_s, part_with_gamma_theta_1, part_with_gamma_theta_2, part_with_gamma_theta_3, w, mu, sum_d_arr)
-    tick()
     comp_r1 = 1
     lk = ReentrantLock()
 
-    @Threads.threads for s = 1:S
-        summ_r1_n = 0
+    for k = 1:size(S_div , 1)
+            @Threads.threads for s = S_div[k,1]:S_div[k,2]
+            summ_r1_n = 0
 
-        @inbounds for i = 1:3 * L_common^2
-            q_i = q_arr[i]
-            f_i = f_arr[i]
-            step = step_arr[i]
-            value = s - sum_d_arr[f_i]
-            ae, gamma, hi = value < 1 ? (0, 0, 0) : (ae_arr[value], gamma_arr[value], hi_arr[value])
-            type_symbol = i <= L_common^2 ? :line : (i <= 2 * L_common^2 ? :wave : :cover)
-            theta = i <= L_common^2 ? theta1 : (i <= 2 * L_common^2 ? theta2 : theta3)
-            a = i <= L_common^2 ? a1 : (i <= 2 * L_common^2 ? a2 : a3)
-            b = i <= L_common^2 ? b1 : (i <= 2 * L_common^2 ? b2 : 0)
-            part_with_gamma = i <= L_common^2 ? part_with_gamma_theta_1 : (i <= 2 * L_common^2 ? part_with_gamma_theta_2 : part_with_gamma_theta_3)
-            psl = i <= L_common^2 ? p_s_l_line[s, f_i] : (i <= 2 * L_common^2 ? p_s_l_wave[s, f_i] : p_s_l_cover[s, f_i])
-            v = v_arrs[s]
-            pslk = p_s_l_k_vs_combined(s, f_i, q_i, v, theta, a, L_common, w, L1, mu, ae, gamma, type_symbol, part_with_gamma)
-            summ_r1_n += P_s * psl * pslk
-        end
-        lock(lk) do
+            @inbounds for i = 1:3 * L_common^2
+                q_i = q_arr[i]
+                f_i = f_arr[i]
+                step = step_arr[i]
+                value = s - sum_d_arr[f_i]
+                ae, gamma, hi = value < 1 ? (0, 0, 0) : (ae_arr[value], gamma_arr[value], hi_arr[value])
+                type_symbol = i <= L_common^2 ? :line : (i <= 2 * L_common^2 ? :wave : :cover)
+                theta = i <= L_common^2 ? theta1 : (i <= 2 * L_common^2 ? theta2 : theta3)
+                a = i <= L_common^2 ? a1 : (i <= 2 * L_common^2 ? a2 : a3)
+                b = i <= L_common^2 ? b1 : (i <= 2 * L_common^2 ? b2 : 0)
+                part_with_gamma = i <= L_common^2 ? part_with_gamma_theta_1 : (i <= 2 * L_common^2 ? part_with_gamma_theta_2 : part_with_gamma_theta_3)
+                psl = i <= L_common^2 ? p_s_l_line[s, f_i] : (i <= 2 * L_common^2 ? p_s_l_wave[s, f_i] : p_s_l_cover[s, f_i])
+                v = v_arrs[s]
+                pslk = p_s_l_k_vs_combined(s, f_i, q_i, v, theta, a, L_common, w, L1, mu, ae, gamma, type_symbol, part_with_gamma)
+                summ_r1_n += P_s * psl * pslk
+            end
+            lock(lk)
             comp_r1 *= (1 - summ_r1_n)
+            unlock(lk)
         end
     end
 
