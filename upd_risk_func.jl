@@ -175,8 +175,8 @@ function p_s_l_k_vs_combined(s, l, k, v, theta, a, L, w, Lw, mu, ae, gamma, mode
 end
 
 function M_C(f, v, step, p_type, p1_arr, p2_arr)
-	common_part = 4.5e6 * ((2 / (1 + exp(-0.2 * v))) - 1)
-	# common_part = 4.5e6 * (1 - (-(9 / 200) * v + 1) * exp(-0.005 * (v ^ 2)))
+	# common_part = 4.5e6 * ((2 / (1 + exp(-0.2 * v))) - 1)
+	common_part = 4.5e6 * (1 - (-(9 / 200) * v + 1) * exp(-0.005 * (v ^ 2)))
     
     if p_type == :line
         return p1_arr[f] * 1e5 + common_part * step
