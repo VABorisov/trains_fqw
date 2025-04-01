@@ -39,8 +39,8 @@ function main()
     theta2 = 0.2933
     theta3 = 0.41
     a1 = [-7.76, 315.69, 286.88, 0.63, -333.03, 4.32, 0.17, -1.55, 0.2, 0.04]
-    a2 = [-5.33, 0.83, 0.56, 1.36, 0.2933]
-    a3 = [-1.49, 0.99, -0.16, -0.91, 0.43, 0.41]
+    a2 = [-5.33, 0.83, 0.56, 1.36]
+    a3 = [-1.49, 0.99, -0.16, -0.91, 0.43]
     b1 = [-7.16, 1.98, 2.05]
     b2 = [-2.43, 1.87, 0.19]
     L_common = L0 + L1
@@ -65,23 +65,29 @@ function main()
     p_s_l_cover,
     part_with_gamma_theta_1, 
     part_with_gamma_theta_2, 
-    part_with_gamma_theta_3 = precalculation(S,
-                                             S_div,
-                                             theta1,
-                                             theta2, 
-                                             theta3, 
-                                             muliplier_p_line_s_l, 
-                                             muliplier_p_wave_s_l, 
-                                             muliplier_p_cover_s_l, 
-                                             ae_s, 
-                                             gamma_s, 
-                                             L_common, 
-                                             sum_d_arr, 
-                                             hi_s)                     
+    part_with_gamma_theta_3,
+    p1_arr,
+    p2_arr = precalculation(S,
+                            S_div,
+                            theta1,
+                            theta2, 
+                            theta3, 
+                            muliplier_p_line_s_l, 
+                            muliplier_p_wave_s_l, 
+                            muliplier_p_cover_s_l, 
+                            ae_s, 
+                            gamma_s, 
+                            L_common, 
+                            sum_d_arr, 
+                            hi_s,
+                            b1,
+                            b2,
+                            mu)              
     ipopt = optimizer_with_attributes(Ipopt.Optimizer,
-    "print_level" => 5,  
-    "linear_solver" => "mumps",
-    )
+        "print_level" => 5,  
+        "linear_solver" => "mumps",
+        "bound_relax_factor" => 0.0
+        )
     model = Model(ipopt)
     @variable(model, (1/V_const) .<= x[1:size(S_div , 1)] .<= (1/v_const))
     for i in 1:size(S_div, 1)
@@ -117,15 +123,15 @@ function main()
         JuMP.register(
         model,
         :my_objective,
-        size(S_div, 1), 
+        size(S_div, 1),
         objective_closure;
-        autodiff = true 
+        autodiff = true
     )
 
     @NLobjective(
         model,
-        Max,
-        my_objective(x...) 
+        Min,
+        my_objective(x...)
     )
 
     @constraint(model, sum(S_lengths[i] * x[i] for i in 1:size(S_lengths, 1)) <= T)

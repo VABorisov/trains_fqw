@@ -1,7 +1,10 @@
+using Printf
 using TickTock
 using Base.Threads
 using SpecialFunctions
 using Distributions
+
+const _norm = Normal()
 
 function precalculation(S,
                         S_div,
@@ -15,7 +18,10 @@ function precalculation(S,
                         gamma_s, 
                         L_common, 
                         sum_d_arr, 
-                        hi_s)
+                        hi_s,
+                        b1,
+                        b2,
+                        mu)
 
     ae_arr = zeros(S, 1)
     gamma_arr = zeros(S, 1)
@@ -24,6 +30,8 @@ function precalculation(S,
     part_with_gamma_theta_1 = zeros(L_common, 1)
     part_with_gamma_theta_2 = zeros(L_common, 1)
     part_with_gamma_theta_3 = zeros(L_common, 1)
+    p1_arr = zeros(L_common, 1)
+    p2_arr = zeros(L_common, 1)
     function compute_expression(x, theta)
         numerator = gamma(x - 1 + (1 / theta))
         denominator = gamma(x) * gamma(1 / theta)
@@ -56,9 +64,11 @@ function precalculation(S,
         part_with_gamma_theta_1[l] = compute_expression(l, theta1)
         part_with_gamma_theta_2[l] = compute_expression(l, theta2)
         part_with_gamma_theta_3[l] = compute_expression(l, theta3)
+        p1_arr[l] = (atan(b1[1] + b1[2] * (L_common - l + 1) + b1[3] * mu)/pi)+0.5
+        p2_arr[l] = cdf(_norm,  b2[1] + b2[2] * (L_common - l + 1) + b2[3] * mu)
     end
 
-    return ae_arr, gamma_arr, hi_arr, p_s_l_line, p_s_l_wave, p_s_l_cover, part_with_gamma_theta_1, part_with_gamma_theta_2, part_with_gamma_theta_3
+    return ae_arr, gamma_arr, hi_arr, p_s_l_line, p_s_l_wave, p_s_l_cover, part_with_gamma_theta_1, part_with_gamma_theta_2, part_with_gamma_theta_3, p1_arr, p2_arr
 end
 
 function g1(a1, xmax, v, w, L, Lw, mu, ae, gamma)
@@ -97,17 +107,6 @@ function g3(a3, xmax, v, w, L, Lw, mu, ae, gamma)
               a3[5] * log(v * 3.6) * log(xmax)
     result = exp(exp_val)
     return result
-end
-
-function p1(b1, x, xmax, v, w, L, Lw, mu,  ae, gamma)
-    res = (atan(b1[1] + b1[2] * x + b1[3] * mu)/pi)+0.5
-    return res
-end
-
-function p2(b2, x, xmax, v, w, L, Lw, mu, ae, gamma)
-    x = b2[1] + b2[2] * x + b2[3] * mu
-    res = cdf(Normal(), x)
-    return res
 end
 
 function q_func(L)
@@ -169,15 +168,16 @@ function p_s_l_k_vs_combined(s, l, k, v, theta, a, L, w, Lw, mu, ae, gamma, mode
     return result
 end
 
-function M_C(hi, b, q, f, v, L, w, Lw, mu, ae, gamma, step, p_type)
-    res = if p_type == :line
-        p1(b, q,L-f+1, v, w, L, Lw, mu, ae, gamma) * 10 ^ 5 + 4.5E6 * (9/200) * v * step
+function M_C(f, v, step, p_type, p1_arr, p2_arr)
+	common_part = 4.5e6 * (9/200) * v * step
+    
+    if p_type == :line
+        return p1_arr[f] * 1e5 + common_part
     elseif p_type == :wave
-        p2(b, q,L-f+1, v, w, L, Lw, mu, ae, gamma) * 10 ^ 5 + 4.5E6 * (9/200) * v * step
-    elseif p_type == :cover
-        10 ^ 5 + 4.5E6 * (9/200) * v * step
+        return p2_arr[f] * 1e5 + common_part
+    else
+        return 1e5 + common_part
     end
-    return res 
 
 end
 
@@ -193,7 +193,7 @@ function ProbabilisticRiskFunction(v_var, S_div, L_common, L1, q_arr, f_arr, ae_
                 q_i = q_arr[i]
                 f_i = f_arr[i]
                 value = s - sum_d_arr[f_i]
-                v = v_var[k]
+                v = 1/v_var[k]
                 ae, gamma= value < 1 ? (0, 0) : (ae_arr[value], gamma_arr[value])
                 type_symbol = i <= L_common^2 ? :line : (i <= 2 * L_common^2 ? :wave : :cover)
                 theta = i <= L_common^2 ? theta1 : (i <= 2 * L_common^2 ? theta2 : theta3)
@@ -209,48 +209,67 @@ function ProbabilisticRiskFunction(v_var, S_div, L_common, L1, q_arr, f_arr, ae_
             unlock(lk)
         end
     end
-    obj_value = 1 .- comp_r1
+    obj_value = log10(1 - comp_r1)
+    formatted_obj = @sprintf("%.30f", obj_value)
     open("ipopt_log.txt", "a") do log_file
-        println(log_file, "Obj: $obj_value, x: $v_var")
+        println(log_file, "Obj: $formatted_obj, x: $v_var")
     end
     return obj_value
 end
 
-function LinearRiskFunction(v_var, S_div, L_common, L1, q_arr, f_arr, step_arr, ae_arr, gamma_arr, hi_arr, theta1, theta2, theta3, a1, a2, a3, b1, b2, p_s_l_line, p_s_l_wave, p_s_l_cover, P_s, part_with_gamma_theta_1, part_with_gamma_theta_2, part_with_gamma_theta_3, w, mu, sum_d_arr)
+function LinearRiskFunction(v_var, S_div, L_common, L1, q_arr, f_arr, step_arr, ae_arr, gamma_arr, hi_arr, theta1, theta2, theta3, a1, a2, a3, p1_arr, p2_arr, p_s_l_line, p_s_l_wave, p_s_l_cover, P_s, part_with_gamma_theta_1, part_with_gamma_theta_2, part_with_gamma_theta_3, w, mu, sum_d_arr)
+    s_values = Int[]
+    for k = 1:size(S_div, 1)
+        append!(s_values, S_div[k,1]:S_div[k,2])
+    end
+
+    summ_r1_ns = zeros(eltype(v_var), length(s_values))
+    summ_r2_ns = zeros(eltype(v_var), length(s_values))
+
+    @Threads.threads for idx = 1:length(s_values)
+        s = s_values[idx]
+        summ_r1_n = 0
+        summ_r2_n = 0
+
+        for i = 1:3*L_common^2
+            q_i = q_arr[i]
+            f_i = f_arr[i]
+            step = step_arr[i]
+            value = s - sum_d_arr[f_i]
+            ae, gamma, hi = value < 1 ? (Float64(0), Float64(0), Float64(0)) : (ae_arr[value], gamma_arr[value], hi_arr[value])
+            type_symbol = i <= L_common^2 ? :line : (i <= 2*L_common^2 ? :wave : :cover)
+            theta = i <= L_common^2 ? theta1 : (i <= 2*L_common^2 ? theta2 : theta3)
+            a = i <= L_common^2 ? a1 : (i <= 2*L_common^2 ? a2 : a3)
+            part_with_gamma = i <= L_common^2 ? part_with_gamma_theta_1 : (i <= 2*L_common^2 ? part_with_gamma_theta_2 : part_with_gamma_theta_3)
+            psl = i <= L_common^2 ? p_s_l_line[s, f_i] : (i <= 2*L_common^2 ? p_s_l_wave[s, f_i] : p_s_l_cover[s, f_i])
+            
+            v = 1/ v_var[findfirst(k -> S_div[k,1] <= s <= S_div[k,2], 1:size(S_div,1))]
+            pslk = p_s_l_k_vs_combined(s, f_i, q_i, v, theta, a, L_common, w, L1, mu, ae, gamma, type_symbol, part_with_gamma)
+            m_c_si_vs = M_C(f_i, v, step, type_symbol, p1_arr, p2_arr)
+            
+            summ_r1_n += P_s * psl * pslk
+            summ_r2_n += m_c_si_vs * P_s * psl * pslk
+        end
+
+        summ_r1_ns[idx] = summ_r1_n
+        summ_r2_ns[idx] = summ_r2_n
+    end
+
     comp_r1 = 1
     summ_r2 = 0
-    for k = 1:size(S_div , 1)
-        @Threads.threads for s = S_div[k,1]:S_div[k,2]
-            summ_r1_n = 0
-            summ_r2_n = 0
-            @inbounds for i = 1:3 * L_common^2
-                q_i = q_arr[i]
-                f_i = f_arr[i]
-                step = step_arr[i]
-                v = v_var[k]
-                value = s - sum_d_arr[f_i]
-                ae, gamma, hi = value < 1 ? (0, 0, 0) : (ae_arr[value], gamma_arr[value], hi_arr[value])
-                type_symbol = i <= L_common^2 ? :line : (i <= 2 * L_common^2 ? :wave : :cover)
-                theta = i <= L_common^2 ? theta1 : (i <= 2 * L_common^2 ? theta2 : theta3)
-                a = i <= L_common^2 ? a1 : (i <= 2 * L_common^2 ? a2 : a3)
-                b = i <= L_common^2 ? b1 : (i <= 2 * L_common^2 ? b2 : 0)
-                part_with_gamma = i <= L_common^2 ? part_with_gamma_theta_1 : (i <= 2 * L_common^2 ? part_with_gamma_theta_2 : part_with_gamma_theta_3)
-                psl = i <= L_common^2 ? p_s_l_line[s, f_i] : (i <= 2 * L_common^2 ? p_s_l_wave[s, f_i] : p_s_l_cover[s, f_i])
-                pslk = p_s_l_k_vs_combined(s, f_i, q_i, v, theta, a, L_common, w, L1, mu, ae, gamma, type_symbol, part_with_gamma)
-                m_c_si_vs = M_C(hi,b,q_i,f_i,v,L_common,w,L1,mu,ae,gamma,step,type_symbol)
-                summ_r1_n += P_s * psl * pslk
-                summ_r2_n += m_c_si_vs * P_s * psl * pslk * comp_r1
-            end
-            comp_r1 *= (1 - summ_r1_n)
-            summ_r2 += summ_r2_n
-        end
+    for idx = 1:length(s_values)
+        comp_r1 *= (1 - summ_r1_ns[idx])
+        summ_r2 += (summ_r2_ns[idx] * comp_r1 / (1 - summ_r1_ns[idx]))
     end
-    obj_value = summ_r2
-    open("ipopt_log_linear.txt", "a") do log_file
-        println(log_file, "Obj: $obj_value, x: $v_var")
+
+	obj_value = summ_r2
+    formatted_obj = @sprintf("%.30f", obj_value)
+    open("ipopt_lin_log.txt", "a") do log_file
+        println(log_file, "Obj: $formatted_obj, x: $v_var")
     end
-    return summ_r2
+    return obj_value
 end
+
 
 # function QuadraticRiskFunction()
     
