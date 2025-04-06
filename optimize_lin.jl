@@ -45,7 +45,7 @@ function main()
     b1 = [-7.16, 1.98, 2.05]
     b2 = [-2.43, 1.87, 0.19]
     L_common = L0 + L1
-    S_lengths = S_div[:,2] .- S_div[:,1]  
+    S_lengths = S_div[:,2] .- S_div[:,1] .+ 1
     d = vcat([20, 20], fill(14, L_common - 2))
     mu = (w / (69 * L1)) - (1 / 3)
     Q1 = (p_1 + p_2 + p_3) / (1000 * Q1_strict)
