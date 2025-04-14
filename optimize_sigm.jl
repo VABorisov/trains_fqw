@@ -145,18 +145,11 @@ function main()
         end
     end
 
-    pushfirst!(v_arr, 0)
-
     v_arr_const = copy(v_arr)
 
-    for i = 1:S - 1
-    	accelerated_v = sqrt(v_arr[i]^2 + 2 * a)
-        if accelerated_v < v_arr[i + 1]
-            v_arr[i + 1] = accelerated_v
-            continue
-        end
-		if v_arr[i + 1] > v_arr[i]
-			j = i
+    for i = 1:length(v_arr) - 1
+        if v_arr[i + 1] > v_arr[i]
+            j = i
             v_target = v_arr[i]
             while j >= 1
                 new_v = sqrt(v_arr[j + 1]^2 - 2 * a)
@@ -169,7 +162,7 @@ function main()
         elseif v_arr[i + 1] < v_arr[i]
             j = i + 1
             v_target = v_arr[i + 1]
-            while j <= S
+            while j <= length(v_arr)
                 new_v = sqrt(v_arr[j - 1]^2 - 2 * a)
                 if new_v < v_target
                     break
@@ -182,21 +175,25 @@ function main()
 
     minimum_func = objective_value(model)
     res_recalc = SigmoidRiskFunctionEveryMetr(
-                        v_arr[2:250001], S_div, L_common, L1, q_arr, f_arr, step_arr, ae_arr, gamma_arr, hi_arr, theta1, theta2, theta3, a1, a2, a3, p1_arr, p2_arr, p_s_l_line, p_s_l_wave, p_s_l_cover, P_s, part_with_gamma_theta_1, part_with_gamma_theta_2, part_with_gamma_theta_3, w, mu, sum_d_arr
+                        v_arr, S_div, L_common, L1, q_arr, f_arr, step_arr, ae_arr, gamma_arr, hi_arr, theta1, theta2, theta3, a1, a2, a3, p1_arr, p2_arr, p_s_l_line, p_s_l_wave, p_s_l_cover, P_s, part_with_gamma_theta_1, part_with_gamma_theta_2, part_with_gamma_theta_3, w, mu, sum_d_arr
                     )
     println(res_recalc) 
-    time_min = sum((S_div[i,2] - S_div[i,1] + 1) / v[i] for i in 1:length(v))
-    time_recalc = sum(1 ./ v_arr[2:250001])
+ 
+   	
+	time_min = sum((S_div[i,2] - S_div[i,1] + 1) / v[i] for i in 1:length(v))
+    time_recalc = sum(1 ./ v_arr)
     println(time_min)
     println(time_recalc)
+    
     open("result.csv", "w") do file
  
         write(file, "minimum objective value = $minimum_func\n")
         write(file, "objective value after recalculation = $res_recalc\n\n")
         write(file, "time with minimum = $time_min\n\n")
         write(file, "time after recalculation = $time_recalc\n\n")
+  
     
-        write(file, "meter,constant_v,calculated_v\n")
+        write(file, "meter,constant_v,calculated_v,calculated_with_tuning\n")
     
         for i in 1:S
             write(file, "$(i),$(v_arr_const[i]),$(v_arr[i])\n")

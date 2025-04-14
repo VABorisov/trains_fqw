@@ -1,0 +1,94 @@
+
+******************************************************************************
+This program contains Ipopt, a library for large-scale nonlinear optimization.
+ Ipopt is released as open source code under the Eclipse Public License (EPL).
+         For more information visit https://github.com/coin-or/Ipopt
+******************************************************************************
+
+This is Ipopt version 3.14.17, running with linear solver MUMPS 5.7.3.
+
+Number of nonzeros in equality constraint Jacobian...:        0
+Number of nonzeros in inequality constraint Jacobian.:       10
+Number of nonzeros in Lagrangian Hessian.............:        0
+
+Total number of variables............................:       10
+                     variables with only lower bounds:        0
+                variables with lower and upper bounds:       10
+                     variables with only upper bounds:        0
+Total number of equality constraints.................:        0
+Total number of inequality constraints...............:        1
+        inequality constraints with only lower bounds:        0
+   inequality constraints with lower and upper bounds:        0
+        inequality constraints with only upper bounds:        1
+
+iter    objective    inf_pr   inf_du lg(mu)  ||d||  lg(rg) alpha_du alpha_pr  ls
+   0  5.9401644e+01 5.00e+03 1.38e+01   0.0 0.00e+00    -  0.00e+00 0.00e+00   0
+   1  1.5395056e+02 4.35e+03 8.36e+02  -0.2 5.78e-01    -  1.00e+00 1.23e-01h  1
+   2  2.2441663e+02 0.00e+00 3.12e+02   0.2 5.56e-01    -  1.00e+00 9.71e-01h  1
+   3  1.4582231e+02 0.00e+00 1.93e+02   0.2 8.46e-01    -  9.98e-01 6.70e-01f  1
+   4  1.4551463e+02 0.00e+00 1.92e+02  -0.1 3.83e-02    -  1.00e+00 1.00e+00f  1
+   5  1.3692922e+02 0.00e+00 4.54e+02  -0.2 9.14e-02    -  1.00e+00 1.00e+00f  1
+   6  1.2497076e+02 0.00e+00 3.04e+02   0.3 2.31e-01    -  1.00e+00 9.76e-02f  2
+   7  1.1343581e+02 0.00e+00 1.16e+02   0.5 3.71e-01    -  9.90e-01 1.00e+00f  1
+   8  1.0925310e+02 0.00e+00 5.05e+01  -0.1 3.37e-01    -  1.00e+00 1.00e+00f  1
+   9  1.0651249e+02 0.00e+00 1.27e+01  -1.0 2.42e-01    -  1.00e+00 1.00e+00f  1
+iter    objective    inf_pr   inf_du lg(mu)  ||d||  lg(rg) alpha_du alpha_pr  ls
+  10  1.0575198e+02 0.00e+00 7.42e+00  -2.3 6.27e-02    -  1.00e+00 1.00e+00f  1
+  11  1.0566129e+02 0.00e+00 1.20e+01  -3.7 5.81e-03    -  1.00e+00 1.00e+00f  1
+  12  1.0561260e+02 0.00e+00 3.51e+00  -5.0 1.15e-03    -  1.00e+00 1.00e+00f  1
+  13  1.0560236e+02 0.00e+00 2.68e+00  -6.7 7.83e-04    -  1.00e+00 1.00e+00f  1
+  14  1.0559892e+02 0.00e+00 5.96e+00  -8.2 2.78e-03    -  1.00e+00 1.00e+00f  1
+  15  1.0559376e+02 0.00e+00 1.14e+00  -9.4 8.30e-04    -  1.00e+00 5.00e-01f  2
+  16  1.0559238e+02 0.00e+00 9.76e-02 -10.6 9.02e-04    -  1.00e+00 9.98e-01f  1
+  17  1.0559238e+02 0.00e+00 1.41e-01 -11.0 7.94e-05    -  1.00e+00 1.00e+00f  1
+  18  1.0559238e+02 0.00e+00 1.44e-01 -11.0 3.28e-05    -  1.00e+00 1.00e+00f  1
+  19  1.0559237e+02 0.00e+00 1.14e-02 -11.0 2.67e-05    -  1.00e+00 1.00e+00f  1
+iter    objective    inf_pr   inf_du lg(mu)  ||d||  lg(rg) alpha_du alpha_pr  ls
+  20  1.0559237e+02 0.00e+00 6.21e-03 -11.0 3.22e-06    -  1.00e+00 1.00e+00f  1
+  21  1.0559237e+02 0.00e+00 3.14e-03 -11.0 1.11e-06    -  1.00e+00 1.00e+00f  1
+  22  1.0559237e+02 0.00e+00 1.25e-04 -11.0 3.90e-07    -  1.00e+00 1.00e+00h  1
+  23  1.0559237e+02 0.00e+00 5.00e-05 -11.0 3.71e-08    -  1.00e+00 5.00e-01f  2
+  24  1.0559237e+02 0.00e+00 2.04e-05 -11.0 1.04e-08    -  1.00e+00 1.00e+00h  1
+  25  1.0559237e+02 0.00e+00 2.56e-05 -11.0 7.12e-09    -  1.00e+00 1.00e+00f  1
+  26  1.0559237e+02 0.00e+00 6.27e-06 -11.0 2.66e-09    -  1.00e+00 1.00e+00h  1
+  27  1.0559237e+02 0.00e+00 3.02e-06 -11.0 1.01e-09    -  1.00e+00 5.00e-01f  2
+  28  1.0559237e+02 0.00e+00 2.25e-06 -11.0 5.03e-10    -  1.00e+00 2.50e-01h  3
+  29  1.0559237e+02 0.00e+00 1.43e-07 -11.0 3.75e-10    -  1.00e+00 1.00e+00f  1
+iter    objective    inf_pr   inf_du lg(mu)  ||d||  lg(rg) alpha_du alpha_pr  ls
+  30  1.0559237e+02 0.00e+00 1.14e-07 -11.0 2.32e-11    -  1.00e+00 1.00e+00H  1
+  31  1.0559237e+02 0.00e+00 8.03e-08 -11.0 5.17e-11    -  1.00e+00 5.00e-01f  2
+  32  1.0559237e+02 0.00e+00 5.04e-08 -11.0 6.04e-11    -  1.00e+00 1.00e+00f  1
+  33  1.0559237e+02 0.00e+00 1.08e-07 -11.0 2.08e-11    -  1.00e+00 1.00e+00f  1
+  34  1.0559237e+02 0.00e+00 1.08e-07 -11.0 1.92e-11    -  1.00e+00 3.91e-03f  9
+  35  1.0559237e+02 0.00e+00 1.07e-07 -11.0 1.82e-11    -  1.00e+00 7.81e-03f  8
+  36  1.0559237e+02 0.00e+00 8.04e-08 -11.0 1.77e-11    -  1.00e+00 2.50e-01f  3
+  37  1.0559237e+02 0.00e+00 8.04e-08 -11.0 1.34e-11    -  1.00e+00 2.44e-04f 13
+  38  1.0559237e+02 0.00e+00 3.61e-09 -11.0 1.34e-11    -  1.00e+00 1.00e+00H  1
+
+Number of Iterations....: 38
+
+                                   (scaled)                 (unscaled)
+Objective...............:   3.9077852452352097e+01    1.0559237359443789e+02
+Dual infeasibility......:   3.6098215807844189e-09    9.7541089145626809e-09
+Constraint violation....:   0.0000000000000000e+00    0.0000000000000000e+00
+Variable bound violation:   0.0000000000000000e+00    0.0000000000000000e+00
+Complementarity.........:   1.0008631199061204e-11    2.7044350147665464e-11
+Overall NLP error.......:   3.6098215807844189e-09    9.7541089145626809e-09
+
+
+Number of objective function evaluations             = 108
+Number of objective gradient evaluations             = 39
+Number of equality constraint evaluations            = 0
+Number of inequality constraint evaluations          = 108
+Number of equality constraint Jacobian evaluations   = 0
+Number of inequality constraint Jacobian evaluations = 1
+Number of Lagrangian Hessian evaluations             = 0
+Total seconds in IPOPT                               = 7590.604
+
+EXIT: Optimal Solution Found.
+LOCALLY_SOLVED
+105.59237359443789
+[12.896528081284782, 12.920744080586472, 12.91134950241217, 12.071748338179123, 12.878637054658917, 12.493758648239284, 12.796787729008225, 12.113193850211536, 11.508278048435285, 12.058395443911607]
+105.60763273399436
+19999.999999998116
+19998.87256358155
