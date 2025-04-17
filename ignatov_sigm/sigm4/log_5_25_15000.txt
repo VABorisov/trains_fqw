@@ -86,12 +86,12 @@ Number of inequality constraint evaluations          = 71
 Number of equality constraint Jacobian evaluations   = 0
 Number of inequality constraint Jacobian evaluations = 1
 Number of Lagrangian Hessian evaluations             = 0
-Total seconds in IPOPT                               = 1794.746
+Total seconds in IPOPT                               = 3681.054
 
 EXIT: Optimal Solution Found.
 LOCALLY_SOLVED
 352.05914543188607
 [24.99999999993412, 24.99999999967204, 24.999999999672177, 10.454003745292058, 12.882774880531446, 24.999999999857053, 24.999999999933042, 10.536314362832412, 9.36368431416014, 10.425452224068462]
-354.40346801564505
+357.06874252662084
 14999.999999996367
-14952.770427786527
+14738.477631375872
