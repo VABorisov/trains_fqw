@@ -184,11 +184,19 @@ function M_C(f, v, step, p_type, p1_arr, p2_arr)
 	# common_part = 4.5e6 * ((2.358/(1 + exp(-0.15 * v))) - (2.358/2))
 	# common_part = 4.5e6 * (v ^ 2) * (((3/100) * sqrt(2)) ^ 2)
 	# common_part = 4.5e6 * (9/200) * v
-	express = (((60/200) ^ 2) * (v ^ 2) + 2 * (60 / 200) * v + 2 ) * exp((-60 / 200) * v)
-	common_part = 4.5e6 * (1.148 - 1.148 * (express / 2))
+	# express = (((60/200) ^ 2) * (v ^ 2) + 2 * (60 / 200) * v + 2 ) * exp((-60 / 200) * v)
+	# common_part = 4.5e6 * (1.148 - 1.148 * (express / 2))
 	# express = ((v ^ 2) * exp(-0.5 * (v - 19))) + 625
 	# common_part = 4.5e6 * (9/5000) * (express / (1 + exp(-0.5 * (v - 19))))
     # 
+
+    # express = 1 - (1 / (1 + exp(-0.5 * (v - 19))))
+    # common_part = 4.5e6 * ((v ^ 2) * express + 625 * (1 / (1 + exp(-0.5 * (v - 19))))) * (13.5 / 6232.95)
+	# common_part = 4.5e6 * ((9/200) * v)
+	# common_part = 4.5e6 * ((3/15500) * 13.5 * (v ^ 2))
+	# common_part = 4.5e6 * ((13.5/7.576) * ((1 + exp(-0.15 * v)) ^ -1) - 0.5)
+	common_part = 4.5e6 * ((13.6/14.79) * (1 - (0.045 * (v ^ 2) + 0.3 * v + 1) * exp(-0.3 * v) ))
+	    
     if p_type == :line
         return p1_arr[f] * 1e5 + common_part * step
     elseif p_type == :wave
