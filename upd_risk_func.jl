@@ -77,7 +77,8 @@ function g1(a1, xmax, v, w, L, Lw, mu, ae, gamma)
     gamma_more_0_indicator = Int(gamma > 0)
     gamma_less_0_indicator = Int(gamma < 0)
     exp1 = a1[1] + 
-           a1[2] * ae * log(xmax) + 
+    	   a1[2] * ae  * log(v * 3.6) + 
+           # a1[2] * ae * log(xmax) +
            a1[3] * (1 - mu) * log(xmax) * log(v * 3.6)* min(0, gamma) + 
            a1[4] * (1 - mu) * log(xmax) + 
            a1[5] * (1 - mu)^2 * log(xmax) * log(v * 3.6) * min(0, gamma) + 
@@ -193,9 +194,9 @@ function M_C(f, v, step, p_type, p1_arr, p2_arr)
     # express = 1 - (1 / (1 + exp(-0.5 * (v - 19))))
     # common_part = 4.5e6 * ((v ^ 2) * express + 625 * (1 / (1 + exp(-0.5 * (v - 19))))) * (13.5 / 6232.95)
 	# common_part = 4.5e6 * ((9/200) * v)
-	# common_part = 4.5e6 * ((3/15500) * 13.5 * (v ^ 2))
+	common_part = 4.5e6 * ((3/15500) * 13.5 * (v ^ 2))
 	# common_part = 4.5e6 * ((13.5/7.576) * ((1 + exp(-0.15 * v)) ^ -1) - 0.5)
-	common_part = 4.5e6 * ((13.6/14.79) * (1 - (0.045 * (v ^ 2) + 0.3 * v + 1) * exp(-0.3 * v) ))
+	# common_part = 4.5e6 * ((13.6/14.79) * (1 - (0.045 * (v ^ 2) + 0.3 * v + 1) * exp(-0.3 * v) ))
 	    
     if p_type == :line
         return p1_arr[f] * 1e5 + common_part * step
